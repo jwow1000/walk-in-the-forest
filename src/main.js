@@ -45,7 +45,7 @@ async function init3D() {
   setControls( controls, camera );
 
   const clock = new THREE.Clock();
-  const baseCameraPos = camera.position.clone();
+  const prevDrift = new THREE.Vector2(0, 0);
 
   // add interaction events and render to 3D
   allStories.forEach((item) => {
@@ -67,6 +67,16 @@ async function init3D() {
       item.style.zIndex = "1";
       cutout.style.transform = "scale(0.5)";
     });
+    // prevent native browser image drag
+    cutout.querySelectorAll("img").forEach(img => {
+      img.style.userDrag = "none";
+      img.style.webkitUserDrag = "none";
+      img.style.userSelect = "none";
+      img.style.msUserSelect = "none";
+      img.style.mozUserSelect = "none";
+      img.style.webkitUserSelect = "none";
+    });
+
     // handle the click
     cutout.addEventListener("click", (event) => {
       const slug = item.getAttribute("data-link");
@@ -109,15 +119,19 @@ async function init3D() {
   function animate() {
     requestAnimationFrame( animate );
 
+    // update the damping camera movement first
+    controls.update();
+
     const t = clock.getElapsedTime();
-    camera.position.x = baseCameraPos.x + Math.sin(t * 0.04) * 3;
-    camera.position.y = baseCameraPos.y + Math.sin(t * 0.03) * 1.5;
+    const driftX = Math.sin(t * 0.04) * 3;
+    const driftY = Math.sin(t * 0.03) * 1.5;
+    camera.position.x += driftX - prevDrift.x;
+    camera.position.y += driftY - prevDrift.y;
+    camera.lookAt(controls.target);
+    prevDrift.set(driftX, driftY);
 
     renderCSS.render( scene, camera);
     renderer.render( scene, camera);
-
-    // update the damping camera movement
-    controls.update();
   }
 
   animate();
