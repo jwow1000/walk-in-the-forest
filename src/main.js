@@ -40,9 +40,12 @@ async function init3D() {
   
   // orbit controls
   const controls = new OrbitControls(camera, renderer.domElement);
-  
+
   // customize the Orbit Controls
   setControls( controls, camera );
+
+  const clock = new THREE.Clock();
+  const baseCameraPos = camera.position.clone();
 
   // add interaction events and render to 3D
   allStories.forEach((item) => {
@@ -78,7 +81,7 @@ async function init3D() {
       randomPos(-20,20),
       randomPos(-10,0)
     );
-    
+      
     // 3d render
     const item3d = new CSS3DObject(item);
     item3d.element.style.pointerEvents = "none";
@@ -103,16 +106,18 @@ async function init3D() {
 
 
   // animation loop
-  function animate() { 
-    
+  function animate() {
     requestAnimationFrame( animate );
+
+    const t = clock.getElapsedTime();
+    camera.position.x = baseCameraPos.x + Math.sin(t * 0.04) * 3;
+    camera.position.y = baseCameraPos.y + Math.sin(t * 0.03) * 1.5;
 
     renderCSS.render( scene, camera);
     renderer.render( scene, camera);
 
     // update the damping camera movement
-    controls.update(); 
-    
+    controls.update();
   }
 
   animate();
